@@ -21,6 +21,8 @@ public class InteractiveFiction {
 	static String runGame(TextInput input, GameWorld game) {
 		// This is the current location of the player (initialize as start).
 		Player player = new Player(game.getStart());
+		
+		System.out.println("Type 'help' if you don't know what you're doing.");
 
 		// Play the game until quitting.
 		// This is too hard to express here, so we just use an infinite loop with breaks.
@@ -31,11 +33,20 @@ public class InteractiveFiction {
 			System.out.println();
 			System.out.println("... --- ...");
 			System.out.println(here.getDescription());
+			
+			if (player.hasBeenHearBefore()) {
+				System.out.println("This place feels familiar.");
+			}
+			
+			player.rememberThisPlace();
+		
 
 			// Game over after print!
 			if (here.isTerminalState()) {
 				break;
 			}
+			
+
 
 			// Show a user the ways out of this place.
 			List<Exit> exits = here.getVisibleExits();
@@ -44,6 +55,15 @@ public class InteractiveFiction {
 				Exit e = exits.get(i);
 				System.out.println(" "+i+". " + e.getDescription());
 			}
+			
+			
+			// Show the user the items of the place
+//			for (String i : here.items) {
+//				System.out.println(i);
+//			}
+
+			
+
 
 			// Figure out what the user wants to do, for now, only "quit" is special.
 			List<String> words = input.getUserWords("?");
@@ -54,9 +74,10 @@ public class InteractiveFiction {
 
 			// Get the word they typed as lowercase, and no spaces.
 			// Do not uppercase action -- I have lowercased it.
+			
 			String action = words.get(0).toLowerCase().trim();
 
-			if (action.equals("quit")) {
+			if (action.equals("quit") || action.equals("escape") || action.equals("q")) {
 				if (input.confirm("Are you sure you want to quit?")) {
 					// quit!
 					break;
@@ -65,6 +86,63 @@ public class InteractiveFiction {
 					continue;
 				}
 			}
+			
+			// Show the place the items of the place only after they turn the light on 
+			
+			if (action.equals("light")) {
+				System.out.println("The light is on! \n" + "Now you can see!");
+				for (String i : here.items) {
+				System.out.println(i);
+				}}
+				
+			
+			// help 
+			if (action.equals("help")) {
+				System.out.println("To play the game, enter the number of the room.");
+				System.out.println("To quit the game, type in 'escape', 'q' or 'quit'.");
+				System.out.println("Type 'search' when you want to furthe explore the place.");
+				System.out.println("Type 'take' to pick stuff up while exploring the room.");
+				System.out.println("Type 'stuff' to see what you've found so far.");
+				System.out.println("Type 'light' to get some light when the room is dark.");
+				continue;
+			} 
+			
+			// search method on all exits 
+			
+			if (action.equals("search")) {
+				here.search();
+				System.out.println("You search the room for additional exits.");
+				continue;
+			}
+			
+			// take method
+
+			if (action.equals("take")) {
+				for (String i : here.items) {
+					System.out.println("You take the " + i +".");
+				}
+				
+				player.stuff.addAll(here.items);
+				here.items.removeAll(here.items);
+				
+
+				continue; 
+			}
+			
+			// stuff
+			
+			if (action.equals("stuff")) {
+				if (player.stuff.size() != 0) {
+					for (String i : player.stuff) {
+						System.out.println("You have a "+ i +".");			
+					}
+				} else {
+				System.out.println("You have nothing");	
+			}
+				continue;
+			}
+
+
 
 			// From here on out, what they typed better be a number!
 			Integer exitNum = null;
@@ -85,7 +163,7 @@ public class InteractiveFiction {
 			if (destination.canOpen(player)) {
 				player.moveTo(destination.getTarget());
 			} else {
-				// TODO: some kind of message about it being locked?
+				System.out.println("You cannot unlock that right now. Maybe with a key?");
 			}
 		}
 
@@ -101,7 +179,8 @@ public class InteractiveFiction {
 		TextInput input = TextInput.fromArgs(args);
 
 		// This is the game we're playing.
-		GameWorld game = new SpookyMansion();
+		//GameWorld game = new SpookyMansion();
+		GameWorld game = new HuntedLibrary();
 
 		// Actually play the game.
 		runGame(input, game);
